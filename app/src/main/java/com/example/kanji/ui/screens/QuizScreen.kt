@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
@@ -47,6 +48,7 @@ import com.example.kanji.ui.theme.GreenPrimary
 import com.example.kanji.ui.theme.TextSecondary
 import com.example.kanji.ui.theme.WrongBg
 import com.example.kanji.ui.theme.WrongRed
+import com.example.kanji.util.ImageMapper
 
 @Composable
 fun QuizScreen(
@@ -81,118 +83,124 @@ fun QuizScreen(
     val displayOptions = options.distinct().take(4)
     val isLastQuestion = questionNumber == totalQuestions
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 92.dp)
         ) {
-            LinearProgressIndicator(
-                progress = { progressValue },
-                modifier = Modifier
-                    .weight(1f)
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(99.dp)),
-                color = GreenPrimary,
-                trackColor = GreenLight
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Text(
-                text = "$questionNumber/$totalQuestions",
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = titleText,
-            style = MaterialTheme.typography.bodyLarge,
-            color = TextSecondary
-        )
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 1.dp,
-            shadowElevation = 4.dp
-        ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 22.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Surface(
+                LinearProgressIndicator(
+                    progress = { progressValue },
                     modifier = Modifier
-                        .fillMaxWidth(0.55f)
-                        .aspectRatio(1f),
-                    shape = RoundedCornerShape(22.dp),
-                    color = Color.White,
-                    shadowElevation = 4.dp
-                ) {
-                    Image(
-                        painter = painterResource(id = question.imageRes),
-                        contentDescription = question.meaning,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+                        .weight(1f)
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(99.dp)),
+                    color = GreenPrimary,
+                    trackColor = GreenLight
+                )
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
                 Text(
-                    text = question.kanji,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.ExtraBold,
-                    textAlign = TextAlign.Center
+                    text = "$questionNumber/$totalQuestions",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        BoxWithConstraints(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            val spacing = 14.dp
-            val cardWidth = (maxWidth - spacing) / 2
+            Text(
+                text = titleText,
+                style = MaterialTheme.typography.bodyLarge,
+                color = TextSecondary
+            )
 
-            displayOptions.chunked(2).forEach { rowItems ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(spacing)
+            Spacer(modifier = Modifier.height(18.dp))
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 1.dp,
+                shadowElevation = 4.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 22.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    rowItems.forEach { option ->
-                        OptionCard(
-                            text = option,
-                            isCorrect = option.trim() == correctAnswer,
-                            isSelected = if (selectedAnswer != null) {
-                                selectedAnswer == option
-                            } else {
-                                pendingAnswer == option
-                            },
-                            isConfirmed = selectedAnswer != null,
-                            modifier = Modifier.width(cardWidth),
-                            onClick = { onAnswerClick(option) }
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth(0.55f)
+                            .aspectRatio(1f),
+                        shape = RoundedCornerShape(22.dp),
+                        color = Color.White,
+                        shadowElevation = 4.dp
+                    ) {
+                        Image(
+                            painter = painterResource(id = ImageMapper.getImageRes(question.imageName)),
+                            contentDescription = question.meaning,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
                         )
                     }
 
-                    if (rowItems.size == 1) {
-                        Spacer(modifier = Modifier.width(cardWidth))
-                    }
-                }
+                    Spacer(modifier = Modifier.height(18.dp))
 
-                Spacer(modifier = Modifier.height(14.dp))
+                    Text(
+                        text = question.kanji,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            BoxWithConstraints(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                val spacing = 14.dp
+                val cardWidth = (maxWidth - spacing) / 2
+
+                displayOptions.chunked(2).forEach { rowItems ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(spacing)
+                    ) {
+                        rowItems.forEach { option ->
+                            OptionCard(
+                                text = option,
+                                isCorrect = option.trim() == correctAnswer,
+                                isSelected = if (selectedAnswer != null) {
+                                    selectedAnswer == option
+                                } else {
+                                    pendingAnswer == option
+                                },
+                                isConfirmed = selectedAnswer != null,
+                                modifier = Modifier.width(cardWidth),
+                                onClick = { onAnswerClick(option) }
+                            )
+                        }
+
+                        if (rowItems.size == 1) {
+                            Spacer(modifier = Modifier.width(cardWidth))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
             }
         }
 
@@ -202,7 +210,9 @@ fun QuizScreen(
                 enabled = pendingAnswer != null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .height(56.dp)
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding(),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = GreenPrimary,
@@ -227,11 +237,7 @@ fun QuizScreen(
                 dismissOnBackPress = false,
                 dismissOnClickOutside = false
             ),
-            containerColor = if (isCorrect) {
-                CorrectBg
-            } else {
-                WrongBg
-            },
+            containerColor = if (isCorrect) CorrectBg else WrongBg,
             title = {
                 Text(
                     text = if (isCorrect) "ตอบถูก!" else "ตอบผิด",
@@ -249,8 +255,7 @@ fun QuizScreen(
                             "คำตอบที่ถูกคือ $correctAnswer"
                         },
                         style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        fontWeight = FontWeight.SemiBold
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -258,8 +263,7 @@ fun QuizScreen(
                     Text(
                         text = "คะแนนปัจจุบัน: $score คะแนน",
                         style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        fontWeight = FontWeight.Bold
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))

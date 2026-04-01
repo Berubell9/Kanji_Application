@@ -19,10 +19,6 @@ class KanjiRepository(
         }
     }
 
-    suspend fun getAllKanji(): List<KanjiEntity> {
-        return kanjiDao.getAllRandom()
-    }
-
     suspend fun getQuizQuestions(category: PracticeCategory): List<KanjiEntity> {
         return when (category) {
             PracticeCategory.ALL -> kanjiDao.getAllRandom()

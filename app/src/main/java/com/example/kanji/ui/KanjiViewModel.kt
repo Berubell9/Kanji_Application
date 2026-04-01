@@ -130,8 +130,12 @@ class KanjiViewModel(
 
             try {
                 val state = _uiState.value
-                val allItems = repository.getAllKanji()
-                val questions = repository.getQuizQuestions(state.selectedCategory)
+
+                // ดึงจากหมวดที่เลือก ถ้าเลือก ALL ก็จะได้จากทั้งหมด
+                val randomItems = repository.getQuizQuestions(state.selectedCategory)
+
+                // จำกัดให้เล่นแค่ 10 ข้อ
+                val questions = randomItems.take(10)
 
                 if (questions.isEmpty()) {
                     _uiState.update { currentState ->
@@ -147,7 +151,6 @@ class KanjiViewModel(
                     currentState.copy(
                         screen = AppScreen.QUIZ,
                         mode = mode,
-                        allItems = allItems,
                         questions = questions,
                         currentIndex = 0,
                         score = 0,
@@ -155,7 +158,7 @@ class KanjiViewModel(
                         selectedAnswer = null,
                         options = buildOptions(
                             item = questions.first(),
-                            optionPool = allItems,
+                            optionPool = questions,
                             mode = mode
                         ),
                         isLoading = false
@@ -233,7 +236,7 @@ class KanjiViewModel(
                     selectedAnswer = null,
                     options = buildOptions(
                         item = nextQuestion,
-                        optionPool = state.allItems,
+                        optionPool = state.questions,
                         mode = state.mode
                     )
                 )
@@ -272,40 +275,21 @@ class KanjiViewModel(
     ): List<String> {
         val correct = getCorrectAnswer(item, mode)
 
-        val poolChoices = when (mode) {
+        val allChoices = when (mode) {
             GameMode.READING -> optionPool.map { it.reading.trim() }
             GameMode.MEANING -> optionPool.map { it.meaning.trim() }
         }
+
+        val wrongChoices = allChoices
             .filter { it.isNotBlank() && it != correct }
             .distinct()
             .shuffled()
+            .take(3)
 
-        val fallbackChoices = getFallbackChoices(mode)
-            .map { it.trim() }
-            .filter { it.isNotBlank() && it != correct && it !in poolChoices }
-            .distinct()
-            .shuffled()
-
-        return (listOf(correct) + poolChoices.take(3) + fallbackChoices)
+        return (listOf(correct) + wrongChoices)
             .distinct()
             .take(4)
             .shuffled()
-    }
-
-    private fun getFallbackChoices(mode: GameMode): List<String> {
-        return when (mode) {
-            GameMode.READING -> listOf(
-                "いぬ", "ねこ", "みず", "ひ",
-                "やま", "かわ", "はな", "き",
-                "そら", "つき", "ゆき", "くも"
-            )
-
-            GameMode.MEANING -> listOf(
-                "สุนัข", "แมว", "น้ำ", "ไฟ",
-                "ภูเขา", "แม่น้ำ", "ดอกไม้", "ต้นไม้",
-                "ท้องฟ้า", "พระจันทร์", "หิมะ", "เมฆ"
-            )
-        }
     }
 
     companion object {

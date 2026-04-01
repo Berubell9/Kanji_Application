@@ -21,12 +21,8 @@ fun KanjiQuizApp(
             NameInputScreen(
                 playerName = uiState.playerName,
                 errorMessage = uiState.errorMessage,
-                onNameChange = { name ->
-                    viewModel.updatePlayerName(name)
-                },
-                onStartClick = {
-                    viewModel.goToCategoryScreen()
-                }
+                onNameChange = { name -> viewModel.updatePlayerName(name) },
+                onStartClick = { viewModel.goToCategoryScreen() }
             )
         }
 
@@ -34,15 +30,9 @@ fun KanjiQuizApp(
             CategoryScreen(
                 playerName = uiState.playerName,
                 selectedCategory = uiState.selectedCategory,
-                onCategorySelected = { category ->
-                    viewModel.selectCategory(category)
-                },
-                onBackClick = {
-                    viewModel.goBackToNameInput()
-                },
-                onNextClick = {
-                    viewModel.goToModeScreen()
-                }
+                onCategorySelected = { category -> viewModel.selectCategory(category) },
+                onBackClick = { viewModel.goBackToNameInput() },
+                onNextClick = { viewModel.goToModeScreen() }
             )
         }
 
@@ -51,15 +41,9 @@ fun KanjiQuizApp(
                 playerName = uiState.playerName,
                 selectedCategory = uiState.selectedCategory,
                 selectedMode = uiState.selectedMode,
-                onModeSelected = { mode ->
-                    viewModel.selectMode(mode)
-                },
-                onBackClick = {
-                    viewModel.goBackToCategory()
-                },
-                onNextClick = {
-                    viewModel.startQuizFromSelectedMode()
-                }
+                onModeSelected = { mode -> viewModel.selectMode(mode) },
+                onBackClick = { viewModel.goBackToCategory() },
+                onNextClick = { viewModel.startQuizFromSelectedMode() }
             )
         }
 
@@ -76,15 +60,9 @@ fun KanjiQuizApp(
                     score = uiState.score,
                     pendingAnswer = uiState.pendingAnswer,
                     selectedAnswer = uiState.selectedAnswer,
-                    onAnswerClick = { answer ->
-                        viewModel.selectAnswer(answer)
-                    },
-                    onConfirmClick = {
-                        viewModel.confirmAnswer()
-                    },
-                    onNextClick = {
-                        viewModel.goNext()
-                    }
+                    onAnswerClick = { answer -> viewModel.selectAnswer(answer) },
+                    onConfirmClick = { viewModel.confirmAnswer() },
+                    onNextClick = { viewModel.goNext() }
                 )
             }
         }
@@ -93,12 +71,8 @@ fun KanjiQuizApp(
             ResultScreen(
                 score = uiState.score,
                 total = uiState.questions.size,
-                onReplay = {
-                    viewModel.replayQuiz()
-                },
-                onBackHome = {
-                    viewModel.backHome()
-                }
+                onReplay = { viewModel.replayQuiz() },
+                onBackHome = { viewModel.backHome() }
             )
         }
     }

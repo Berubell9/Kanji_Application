@@ -13,7 +13,6 @@ data class KanjiUiState(
     val mode: GameMode = GameMode.READING,
     val selectedCategory: PracticeCategory = PracticeCategory.ALL,
     val selectedMode: PracticeMode? = null,
-    val allItems: List<KanjiEntity> = emptyList(),
     val questions: List<KanjiEntity> = emptyList(),
     val currentIndex: Int = 0,
     val score: Int = 0,
