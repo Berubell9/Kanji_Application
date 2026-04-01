@@ -1,7 +1,9 @@
 package com.example.kanji.model
 
 enum class AppScreen {
-    HOME,
+    NAME_INPUT,
+    CATEGORY,
+    MODE,
     QUIZ,
     RESULT
 }

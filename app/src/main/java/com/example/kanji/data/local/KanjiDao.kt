@@ -12,6 +12,9 @@ interface KanjiDao {
     @Query("SELECT * FROM kanji ORDER BY RANDOM()")
     suspend fun getAllRandom(): List<KanjiEntity>
 
+    @Query("SELECT * FROM kanji WHERE category = :category ORDER BY RANDOM()")
+    suspend fun getByCategoryRandom(category: String): List<KanjiEntity>
+
     @Query("SELECT * FROM kanji ORDER BY id ASC")
     fun observeAll(): Flow<List<KanjiEntity>>
 

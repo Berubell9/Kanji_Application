@@ -10,5 +10,6 @@ data class KanjiEntity(
     val kanji: String,
     val reading: String,
     val meaning: String,
-    val imageRes: Int
+    val imageRes: Int,
+    val category: String
 )

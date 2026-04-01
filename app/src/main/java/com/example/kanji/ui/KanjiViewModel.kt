@@ -7,6 +7,8 @@ import com.example.kanji.data.local.KanjiEntity
 import com.example.kanji.data.repository.KanjiRepository
 import com.example.kanji.model.AppScreen
 import com.example.kanji.model.GameMode
+import com.example.kanji.model.PracticeCategory
+import com.example.kanji.model.PracticeMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,6 +34,91 @@ class KanjiViewModel(
         }
     }
 
+    fun updatePlayerName(name: String) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                playerName = name,
+                errorMessage = null
+            )
+        }
+    }
+
+    fun goToCategoryScreen() {
+        val name = _uiState.value.playerName.trim()
+        if (name.isBlank()) {
+            _uiState.update { currentState ->
+                currentState.copy(errorMessage = "กรุณากรอกชื่อเล่นก่อนเริ่ม")
+            }
+            return
+        }
+
+        _uiState.update { currentState ->
+            currentState.copy(
+                screen = AppScreen.CATEGORY,
+                errorMessage = null
+            )
+        }
+    }
+
+    fun selectCategory(category: PracticeCategory) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                selectedCategory = category,
+                errorMessage = null
+            )
+        }
+    }
+
+    fun goToModeScreen() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                screen = AppScreen.MODE,
+                selectedMode = null,
+                errorMessage = null
+            )
+        }
+    }
+
+    fun selectMode(mode: PracticeMode) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                selectedMode = mode,
+                errorMessage = null
+            )
+        }
+    }
+
+    fun startQuizFromSelectedMode() {
+        when (_uiState.value.selectedMode) {
+            PracticeMode.READING -> startQuiz(GameMode.READING)
+            PracticeMode.MEANING -> startQuiz(GameMode.MEANING)
+            null -> {
+                _uiState.update { currentState ->
+                    currentState.copy(errorMessage = "กรุณาเลือกโหมดก่อน")
+                }
+            }
+        }
+    }
+
+    fun goBackToNameInput() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                screen = AppScreen.NAME_INPUT,
+                errorMessage = null
+            )
+        }
+    }
+
+    fun goBackToCategory() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                screen = AppScreen.CATEGORY,
+                selectedMode = null,
+                errorMessage = null
+            )
+        }
+    }
+
     fun startQuiz(mode: GameMode) {
         viewModelScope.launch {
             _uiState.update { currentState ->
@@ -42,13 +129,15 @@ class KanjiViewModel(
             }
 
             try {
-                val questions = repository.getQuizQuestions()
+                val state = _uiState.value
+                val allItems = repository.getAllKanji()
+                val questions = repository.getQuizQuestions(state.selectedCategory)
 
-                if (questions.size < 4) {
+                if (questions.isEmpty()) {
                     _uiState.update { currentState ->
                         currentState.copy(
                             isLoading = false,
-                            errorMessage = "ต้องมีข้อมูลอย่างน้อย 4 ข้อในฐานข้อมูล"
+                            errorMessage = "หมวดหมู่นี้ยังไม่มีข้อมูลสำหรับฝึก"
                         )
                     }
                     return@launch
@@ -58,13 +147,15 @@ class KanjiViewModel(
                     currentState.copy(
                         screen = AppScreen.QUIZ,
                         mode = mode,
+                        allItems = allItems,
                         questions = questions,
                         currentIndex = 0,
                         score = 0,
+                        pendingAnswer = null,
                         selectedAnswer = null,
                         options = buildOptions(
                             item = questions.first(),
-                            allQuestions = questions,
+                            optionPool = allItems,
                             mode = mode
                         ),
                         isLoading = false
@@ -86,13 +177,30 @@ class KanjiViewModel(
         if (state.selectedAnswer != null) return
         if (state.questions.isEmpty()) return
 
+        _uiState.update { currentState ->
+            currentState.copy(
+                pendingAnswer = answer
+            )
+        }
+    }
+
+    fun confirmAnswer() {
+        val state = _uiState.value
+        if (state.questions.isEmpty()) return
+        if (state.pendingAnswer == null) return
+        if (state.selectedAnswer != null) return
+
         val currentQuestion = state.questions[state.currentIndex]
         val correctAnswer = getCorrectAnswer(currentQuestion, state.mode)
 
         _uiState.update { currentState ->
             currentState.copy(
-                selectedAnswer = answer,
-                score = if (answer == correctAnswer) currentState.score + 1 else currentState.score
+                selectedAnswer = state.pendingAnswer,
+                score = if (state.pendingAnswer == correctAnswer) {
+                    currentState.score + 1
+                } else {
+                    currentState.score
+                }
             )
         }
     }
@@ -100,11 +208,12 @@ class KanjiViewModel(
     fun goNext() {
         val state = _uiState.value
         if (state.questions.isEmpty()) return
+        if (state.selectedAnswer == null) return
 
         if (state.currentIndex == state.questions.lastIndex) {
             viewModelScope.launch {
                 repository.saveResult(
-                    mode = state.mode.name,
+                    mode = "${state.mode.name}_${state.selectedCategory.name}",
                     score = state.score,
                     total = state.questions.size
                 )
@@ -120,10 +229,11 @@ class KanjiViewModel(
             _uiState.update { currentState ->
                 currentState.copy(
                     currentIndex = nextIndex,
+                    pendingAnswer = null,
                     selectedAnswer = null,
                     options = buildOptions(
                         item = nextQuestion,
-                        allQuestions = state.questions,
+                        optionPool = state.allItems,
                         mode = state.mode
                     )
                 )
@@ -138,7 +248,10 @@ class KanjiViewModel(
     fun backHome() {
         _uiState.update { currentState ->
             currentState.copy(
-                screen = AppScreen.HOME,
+                screen = AppScreen.NAME_INPUT,
+                selectedCategory = PracticeCategory.ALL,
+                selectedMode = null,
+                pendingAnswer = null,
                 selectedAnswer = null,
                 errorMessage = null
             )
@@ -149,28 +262,50 @@ class KanjiViewModel(
         return when (mode) {
             GameMode.READING -> item.reading
             GameMode.MEANING -> item.meaning
-        }
+        }.trim()
     }
 
     private fun buildOptions(
         item: KanjiEntity,
-        allQuestions: List<KanjiEntity>,
+        optionPool: List<KanjiEntity>,
         mode: GameMode
     ): List<String> {
         val correct = getCorrectAnswer(item, mode)
 
-        val allChoices = when (mode) {
-            GameMode.READING -> allQuestions.map { question -> question.reading }
-            GameMode.MEANING -> allQuestions.map { question -> question.meaning }
+        val poolChoices = when (mode) {
+            GameMode.READING -> optionPool.map { it.reading.trim() }
+            GameMode.MEANING -> optionPool.map { it.meaning.trim() }
         }
-
-        val wrongChoices = allChoices
-            .filter { choice -> choice != correct }
+            .filter { it.isNotBlank() && it != correct }
             .distinct()
             .shuffled()
-            .take(3)
 
-        return (listOf(correct) + wrongChoices).shuffled()
+        val fallbackChoices = getFallbackChoices(mode)
+            .map { it.trim() }
+            .filter { it.isNotBlank() && it != correct && it !in poolChoices }
+            .distinct()
+            .shuffled()
+
+        return (listOf(correct) + poolChoices.take(3) + fallbackChoices)
+            .distinct()
+            .take(4)
+            .shuffled()
+    }
+
+    private fun getFallbackChoices(mode: GameMode): List<String> {
+        return when (mode) {
+            GameMode.READING -> listOf(
+                "いぬ", "ねこ", "みず", "ひ",
+                "やま", "かわ", "はな", "き",
+                "そら", "つき", "ゆき", "くも"
+            )
+
+            GameMode.MEANING -> listOf(
+                "สุนัข", "แมว", "น้ำ", "ไฟ",
+                "ภูเขา", "แม่น้ำ", "ดอกไม้", "ต้นไม้",
+                "ท้องฟ้า", "พระจันทร์", "หิมะ", "เมฆ"
+            )
+        }
     }
 
     companion object {

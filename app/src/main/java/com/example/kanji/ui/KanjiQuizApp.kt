@@ -4,8 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.kanji.model.AppScreen
-import com.example.kanji.model.GameMode
-import com.example.kanji.ui.screens.HomeScreen
+import com.example.kanji.ui.screens.CategoryScreen
+import com.example.kanji.ui.screens.ModeScreen
+import com.example.kanji.ui.screens.NameInputScreen
 import com.example.kanji.ui.screens.QuizScreen
 import com.example.kanji.ui.screens.ResultScreen
 
@@ -16,16 +17,48 @@ fun KanjiQuizApp(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     when (uiState.screen) {
-        AppScreen.HOME -> {
-            HomeScreen(
-                isLoading = uiState.isLoading,
+        AppScreen.NAME_INPUT -> {
+            NameInputScreen(
+                playerName = uiState.playerName,
                 errorMessage = uiState.errorMessage,
-                latestResults = uiState.latestResults,
-                onReadingClick = {
-                    viewModel.startQuiz(GameMode.READING)
+                onNameChange = { name ->
+                    viewModel.updatePlayerName(name)
                 },
-                onMeaningClick = {
-                    viewModel.startQuiz(GameMode.MEANING)
+                onStartClick = {
+                    viewModel.goToCategoryScreen()
+                }
+            )
+        }
+
+        AppScreen.CATEGORY -> {
+            CategoryScreen(
+                playerName = uiState.playerName,
+                selectedCategory = uiState.selectedCategory,
+                onCategorySelected = { category ->
+                    viewModel.selectCategory(category)
+                },
+                onBackClick = {
+                    viewModel.goBackToNameInput()
+                },
+                onNextClick = {
+                    viewModel.goToModeScreen()
+                }
+            )
+        }
+
+        AppScreen.MODE -> {
+            ModeScreen(
+                playerName = uiState.playerName,
+                selectedCategory = uiState.selectedCategory,
+                selectedMode = uiState.selectedMode,
+                onModeSelected = { mode ->
+                    viewModel.selectMode(mode)
+                },
+                onBackClick = {
+                    viewModel.goBackToCategory()
+                },
+                onNextClick = {
+                    viewModel.startQuizFromSelectedMode()
                 }
             )
         }
@@ -41,9 +74,13 @@ fun KanjiQuizApp(
                     questionNumber = uiState.currentIndex + 1,
                     totalQuestions = uiState.questions.size,
                     score = uiState.score,
+                    pendingAnswer = uiState.pendingAnswer,
                     selectedAnswer = uiState.selectedAnswer,
                     onAnswerClick = { answer ->
                         viewModel.selectAnswer(answer)
+                    },
+                    onConfirmClick = {
+                        viewModel.confirmAnswer()
                     },
                     onNextClick = {
                         viewModel.goNext()

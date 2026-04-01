@@ -12,7 +12,9 @@ class KanjiApplication : Application() {
             applicationContext,
             AppDatabase::class.java,
             "kanji_db"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     val repository: KanjiRepository by lazy {
