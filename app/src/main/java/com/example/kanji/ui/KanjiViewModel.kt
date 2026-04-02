@@ -130,12 +130,8 @@ class KanjiViewModel(
 
             try {
                 val state = _uiState.value
-
-                // ดึงจากหมวดที่เลือก ถ้าเลือก ALL ก็จะได้จากทั้งหมด
-                val randomItems = repository.getQuizQuestions(state.selectedCategory)
-
-                // จำกัดให้เล่นแค่ 10 ข้อ
-                val questions = randomItems.take(10)
+                val sourceItems = repository.getQuizQuestions(state.selectedCategory)
+                val questions = sourceItems.shuffled().take(10)
 
                 if (questions.isEmpty()) {
                     _uiState.update { currentState ->
@@ -147,6 +143,12 @@ class KanjiViewModel(
                     return@launch
                 }
 
+                val firstOptions = buildOptionsFromCategory(
+                    item = questions.first(),
+                    mode = mode,
+                    category = state.selectedCategory
+                )
+
                 _uiState.update { currentState ->
                     currentState.copy(
                         screen = AppScreen.QUIZ,
@@ -156,11 +158,7 @@ class KanjiViewModel(
                         score = 0,
                         pendingAnswer = null,
                         selectedAnswer = null,
-                        options = buildOptions(
-                            item = questions.first(),
-                            optionPool = questions,
-                            mode = mode
-                        ),
+                        options = firstOptions,
                         isLoading = false
                     )
                 }
@@ -177,8 +175,8 @@ class KanjiViewModel(
 
     fun selectAnswer(answer: String) {
         val state = _uiState.value
-        if (state.selectedAnswer != null) return
         if (state.questions.isEmpty()) return
+        if (state.selectedAnswer != null) return
 
         _uiState.update { currentState ->
             currentState.copy(
@@ -226,20 +224,33 @@ class KanjiViewModel(
                 }
             }
         } else {
-            val nextIndex = state.currentIndex + 1
-            val nextQuestion = state.questions[nextIndex]
+            viewModelScope.launch {
+                try {
+                    val nextIndex = state.currentIndex + 1
+                    val nextQuestion = state.questions[nextIndex]
 
-            _uiState.update { currentState ->
-                currentState.copy(
-                    currentIndex = nextIndex,
-                    pendingAnswer = null,
-                    selectedAnswer = null,
-                    options = buildOptions(
+                    val nextOptions = buildOptionsFromCategory(
                         item = nextQuestion,
-                        optionPool = state.questions,
-                        mode = state.mode
+                        mode = state.mode,
+                        category = state.selectedCategory
                     )
-                )
+
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            currentIndex = nextIndex,
+                            pendingAnswer = null,
+                            selectedAnswer = null,
+                            options = nextOptions,
+                            errorMessage = null
+                        )
+                    }
+                } catch (e: Exception) {
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            errorMessage = e.message ?: "เกิดข้อผิดพลาดในการสร้างตัวเลือก"
+                        )
+                    }
+                }
             }
         }
     }
@@ -268,28 +279,35 @@ class KanjiViewModel(
         }.trim()
     }
 
-    private fun buildOptions(
-        item: KanjiEntity,
-        optionPool: List<KanjiEntity>,
+    private fun extractChoices(
+        items: List<KanjiEntity>,
         mode: GameMode
+    ): List<String> {
+        return when (mode) {
+            GameMode.READING -> items.map { it.reading.trim() }
+            GameMode.MEANING -> items.map { it.meaning.trim() }
+        }.filter { it.isNotBlank() }
+    }
+
+    private suspend fun buildOptionsFromCategory(
+        item: KanjiEntity,
+        mode: GameMode,
+        category: PracticeCategory
     ): List<String> {
         val correct = getCorrectAnswer(item, mode)
 
-        val allChoices = when (mode) {
-            GameMode.READING -> optionPool.map { it.reading.trim() }
-            GameMode.MEANING -> optionPool.map { it.meaning.trim() }
-        }
-
-        val wrongChoices = allChoices
-            .filter { it.isNotBlank() && it != correct }
+        val categoryItems = repository.getQuizQuestions(category)
+        val wrongChoices = extractChoices(categoryItems, mode)
+            .filter { it != correct }
             .distinct()
             .shuffled()
             .take(3)
 
-        return (listOf(correct) + wrongChoices)
-            .distinct()
-            .take(4)
-            .shuffled()
+        require(wrongChoices.size == 3) {
+            "หมวด ${category.name} มีตัวเลือกไม่พอสำหรับสร้าง 4 ช้อย"
+        }
+
+        return (wrongChoices + correct).shuffled()
     }
 
     companion object {

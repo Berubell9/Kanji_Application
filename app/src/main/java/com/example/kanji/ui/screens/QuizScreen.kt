@@ -1,7 +1,10 @@
 package com.example.kanji.ui.screens
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,43 +16,51 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import com.example.kanji.data.local.KanjiEntity
 import com.example.kanji.model.GameMode
-import com.example.kanji.ui.theme.CorrectBg
-import com.example.kanji.ui.theme.CorrectGreen
-import com.example.kanji.ui.theme.GreenLight
-import com.example.kanji.ui.theme.GreenPrimary
-import com.example.kanji.ui.theme.TextSecondary
-import com.example.kanji.ui.theme.WrongBg
-import com.example.kanji.ui.theme.WrongRed
 import com.example.kanji.util.ImageMapper
+import kotlinx.coroutines.delay
 
+private val BgWhite = Color(0xFFFFFFFF)
+private val QuestionBg = Color(0xFFF3EAFE)
+
+private val ChoiceRed = Color(0xFFE21B3C)
+private val ChoiceBlue = Color(0xFF1368CE)
+private val ChoiceYellow = Color(0xFFD89E00)
+private val ChoiceGreen = Color(0xFF26890C)
+
+private val CorrectColor = Color(0xFF63C132)
+private val WrongColor = Color(0xFFFF3B5C)
+private val WrongMuted = Color(0xFF9C5AA9)
+
+private val ScreenPadding = 16.dp
+private val OptionSpacing = 10.dp
+private const val AUTO_NEXT_DELAY = 1300L
+
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun QuizScreen(
     mode: GameMode,
@@ -74,266 +85,319 @@ fun QuizScreen(
         GameMode.MEANING -> "เลือกความหมายที่ถูกต้อง"
     }
 
-    val progressValue = if (totalQuestions > 0) {
-        questionNumber.toFloat() / totalQuestions.toFloat()
-    } else {
-        0f
+    val displayOptions = remember(options, correctAnswer) {
+        val cleaned = options
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+
+        if (correctAnswer in cleaned) {
+            cleaned
+        } else {
+            (cleaned + correctAnswer).distinct()
+        }
     }
 
-    val displayOptions = options.distinct().take(4)
-    val isLastQuestion = questionNumber == totalQuestions
+    val isAnswered = selectedAnswer != null
+    val isCorrect = selectedAnswer?.trim() == correctAnswer
+
+    LaunchedEffect(selectedAnswer, questionNumber) {
+        if (selectedAnswer != null) {
+            delay(AUTO_NEXT_DELAY)
+            onNextClick()
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp, vertical = 16.dp)
+            .background(BgWhite)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 92.dp)
+                .padding(horizontal = ScreenPadding, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                LinearProgressIndicator(
-                    progress = { progressValue },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(99.dp)),
-                    color = GreenPrimary,
-                    trackColor = GreenLight
-                )
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Text(
-                    text = "$questionNumber/$totalQuestions",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+            SegmentedProgress(
+                current = questionNumber,
+                total = totalQuestions,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp, bottom = 14.dp)
+            )
 
             Text(
                 text = titleText,
-                style = MaterialTheme.typography.bodyLarge,
-                color = TextSecondary
+                modifier = Modifier.fillMaxWidth(),
+                color = Color(0xFF222222),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            Surface(
+            Box(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 1.dp,
-                shadowElevation = 4.dp
+                contentAlignment = Alignment.Center
             ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 22.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth(0.58f)
+                        .aspectRatio(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.White,
+                    border = BorderStroke(1.dp, Color(0xFFE7E7E7)),
+                    shadowElevation = 3.dp
                 ) {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth(0.55f)
-                            .aspectRatio(1f),
-                        shape = RoundedCornerShape(22.dp),
-                        color = Color.White,
-                        shadowElevation = 4.dp
-                    ) {
-                        Image(
-                            painter = painterResource(id = ImageMapper.getImageRes(question.imageName)),
-                            contentDescription = question.meaning,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(18.dp))
-
-                    Text(
-                        text = question.kanji,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.ExtraBold,
-                        textAlign = TextAlign.Center
+                    Image(
+                        painter = painterResource(id = ImageMapper.getImageRes(question.imageName)),
+                        contentDescription = question.meaning,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
+                }
+
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = isAnswered,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                ) {
+                    ResultBanner(isCorrect = isCorrect)
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
+                color = QuestionBg
+            ) {
+                Text(
+                    text = question.kanji,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 14.dp),
+                    textAlign = TextAlign.Center,
+                    color = Color(0xFF3A3151),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
 
             BoxWithConstraints(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                val spacing = 14.dp
-                val cardWidth = (maxWidth - spacing) / 2
+                val itemWidth = (maxWidth - OptionSpacing) / 2
+                val optionColors = listOf(
+                    ChoiceRed,
+                    ChoiceBlue,
+                    ChoiceYellow,
+                    ChoiceGreen
+                )
 
-                displayOptions.chunked(2).forEach { rowItems ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(spacing)
-                    ) {
-                        rowItems.forEach { option ->
-                            OptionCard(
-                                text = option,
-                                isCorrect = option.trim() == correctAnswer,
-                                isSelected = if (selectedAnswer != null) {
-                                    selectedAnswer == option
-                                } else {
-                                    pendingAnswer == option
-                                },
-                                isConfirmed = selectedAnswer != null,
-                                modifier = Modifier.width(cardWidth),
-                                onClick = { onAnswerClick(option) }
-                            )
-                        }
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(OptionSpacing)
+                ) {
+                    displayOptions.chunked(2).forEachIndexed { rowIndex, rowItems ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(OptionSpacing)
+                        ) {
+                            rowItems.forEachIndexed { colIndex, option ->
+                                val absoluteIndex = rowIndex * 2 + colIndex
+                                val baseColor = optionColors.getOrElse(absoluteIndex) { ChoiceBlue }
 
-                        if (rowItems.size == 1) {
-                            Spacer(modifier = Modifier.width(cardWidth))
+                                QuizOptionButton(
+                                    text = option,
+                                    baseColor = baseColor,
+                                    marker = optionMarker(absoluteIndex),
+                                    state = resolveOptionState(
+                                        option = option,
+                                        correctAnswer = correctAnswer,
+                                        selectedAnswer = selectedAnswer
+                                    ),
+                                    modifier = Modifier.width(itemWidth),
+                                    onClick = {
+                                        if (selectedAnswer == null) {
+                                            onAnswerClick(option)
+                                            onConfirmClick()
+                                        }
+                                    }
+                                )
+                            }
+
+                            if (rowItems.size == 1) {
+                                Spacer(modifier = Modifier.width(itemWidth))
+                            }
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(14.dp))
                 }
             }
         }
-
-        if (selectedAnswer == null) {
-            Button(
-                onClick = onConfirmClick,
-                enabled = pendingAnswer != null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding(),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = GreenPrimary,
-                    disabledContainerColor = GreenPrimary.copy(alpha = 0.45f)
-                )
-            ) {
-                Text(
-                    text = "ยืนยันคำตอบ",
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-        }
-    }
-
-    if (selectedAnswer != null) {
-        val isCorrect = selectedAnswer.trim() == correctAnswer
-
-        AlertDialog(
-            onDismissRequest = {},
-            properties = DialogProperties(
-                dismissOnBackPress = false,
-                dismissOnClickOutside = false
-            ),
-            containerColor = if (isCorrect) CorrectBg else WrongBg,
-            title = {
-                Text(
-                    text = if (isCorrect) "ตอบถูก!" else "ตอบผิด",
-                    color = if (isCorrect) CorrectGreen else WrongRed,
-                    fontWeight = FontWeight.ExtraBold,
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            },
-            text = {
-                Column {
-                    Text(
-                        text = if (isCorrect) {
-                            "เก่งมาก คำตอบของคุณถูกต้อง"
-                        } else {
-                            "คำตอบที่ถูกคือ $correctAnswer"
-                        },
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = "คะแนนปัจจุบัน: $score คะแนน",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "ทำไปแล้ว $questionNumber / $totalQuestions ข้อ",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = onNextClick) {
-                    Text(
-                        text = if (isLastQuestion) "ดูผลลัพธ์" else "ข้อถัดไป",
-                        fontWeight = FontWeight.Bold,
-                        color = GreenPrimary
-                    )
-                }
-            }
-        )
     }
 }
 
 @Composable
-private fun OptionCard(
+private fun SegmentedProgress(
+    current: Int,
+    total: Int,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        repeat(total.coerceAtLeast(1)) { index ->
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(5.dp)
+                    .clip(RoundedCornerShape(99.dp))
+                    .background(
+                        if (index < current) Color(0xFF1F1F1F) else Color(0xFFE3E3E3)
+                    )
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuizOptionButton(
     text: String,
-    isCorrect: Boolean,
-    isSelected: Boolean,
-    isConfirmed: Boolean,
+    baseColor: Color,
+    marker: String,
+    state: OptionVisualState,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val bgColor = when {
-        isConfirmed && isCorrect -> CorrectBg
-        isConfirmed && isSelected && !isCorrect -> WrongBg
-        else -> MaterialTheme.colorScheme.surface
+    val backgroundColor = when (state) {
+        OptionVisualState.NORMAL -> baseColor
+        OptionVisualState.CORRECT -> CorrectColor
+        OptionVisualState.WRONG_SELECTED -> WrongColor
+        OptionVisualState.WRONG_OTHER -> WrongMuted
     }
 
-    val borderColor = when {
-        isConfirmed && isCorrect -> CorrectGreen
-        isConfirmed && isSelected && !isCorrect -> WrongRed
-        !isConfirmed && isSelected -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
+    val badgeText = when (state) {
+        OptionVisualState.CORRECT -> "✓"
+        OptionVisualState.WRONG_SELECTED,
+        OptionVisualState.WRONG_OTHER -> "✕"
+        OptionVisualState.NORMAL -> marker
+    }
+
+    val textColor = when (state) {
+        OptionVisualState.WRONG_OTHER -> Color.White.copy(alpha = 0.72f)
+        else -> Color.White
     }
 
     Surface(
         modifier = modifier
-            .height(112.dp)
-            .sizeIn(minWidth = 0.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .border(1.5.dp, borderColor, RoundedCornerShape(18.dp))
-            .clickable(enabled = !isConfirmed, onClick = onClick),
-        shape = RoundedCornerShape(18.dp),
-        color = bgColor,
-        tonalElevation = 1.dp,
-        shadowElevation = 3.dp
+            .height(118.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(
+                enabled = state == OptionVisualState.NORMAL,
+                onClick = onClick
+            ),
+        shape = RoundedCornerShape(8.dp),
+        color = backgroundColor,
+        border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.12f)),
+        shadowElevation = 2.dp
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .size(26.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.95f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = badgeText,
+                    color = backgroundColor,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
+
+            Text(
+                text = text,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(horizontal = 14.dp),
+                color = textColor,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.ExtraBold
+            )
+        }
+    }
+}
+
+@Composable
+private fun ResultBanner(isCorrect: Boolean) {
+    val bannerColor = if (isCorrect) CorrectColor else WrongColor
+    val text = if (isCorrect) "✓ ถูกต้อง" else "✕ ไม่ถูกต้อง"
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer { rotationZ = -4f },
+        color = bannerColor,
+        shadowElevation = 10.dp
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
+                .fillMaxWidth()
+                .padding(vertical = 18.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = text,
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                color = Color.White,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.ExtraBold
             )
         }
     }
+}
+
+private fun resolveOptionState(
+    option: String,
+    correctAnswer: String,
+    selectedAnswer: String?
+): OptionVisualState {
+    if (selectedAnswer == null) return OptionVisualState.NORMAL
+
+    val normalizedOption = option.trim()
+    val normalizedCorrect = correctAnswer.trim()
+    val normalizedSelected = selectedAnswer.trim()
+
+    return when {
+        normalizedOption == normalizedCorrect -> OptionVisualState.CORRECT
+        normalizedOption == normalizedSelected -> OptionVisualState.WRONG_SELECTED
+        else -> OptionVisualState.WRONG_OTHER
+    }
+}
+
+private fun optionMarker(index: Int): String {
+    return when (index) {
+        0 -> "▲"
+        1 -> "◆"
+        2 -> "●"
+        else -> "■"
+    }
+}
+
+private enum class OptionVisualState {
+    NORMAL,
+    CORRECT,
+    WRONG_SELECTED,
+    WRONG_OTHER
 }
