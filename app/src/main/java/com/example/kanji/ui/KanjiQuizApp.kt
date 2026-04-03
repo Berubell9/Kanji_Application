@@ -52,17 +52,19 @@ fun KanjiQuizApp(
                 val currentQuestion = uiState.questions[uiState.currentIndex]
 
                 QuizScreen(
+                    playerName = uiState.playerName,
+                    categoryText = uiState.selectedCategory.name,
                     mode = uiState.mode,
-                    question = currentQuestion,
+                    question = uiState.questions[uiState.currentIndex],
                     options = uiState.options,
                     questionNumber = uiState.currentIndex + 1,
                     totalQuestions = uiState.questions.size,
                     score = uiState.score,
                     pendingAnswer = uiState.pendingAnswer,
                     selectedAnswer = uiState.selectedAnswer,
-                    onAnswerClick = { answer -> viewModel.selectAnswer(answer) },
-                    onConfirmClick = { viewModel.confirmAnswer() },
-                    onNextClick = { viewModel.goNext() }
+                    onAnswerClick = viewModel::selectAnswer,
+                    onConfirmClick = viewModel::confirmAnswer,
+                    onNextClick = viewModel::goNext
                 )
             }
         }

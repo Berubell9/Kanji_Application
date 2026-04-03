@@ -13,16 +13,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -54,7 +54,7 @@ private val ChoiceGreen = Color(0xFF26890C)
 
 private val CorrectColor = Color(0xFF63C132)
 private val WrongColor = Color(0xFFFF3B5C)
-private val WrongMuted = Color(0xFF9C5AA9)
+private val WrongMuted = Color(0xFFA95A5A)
 
 private val ScreenPadding = 16.dp
 private val OptionSpacing = 10.dp
@@ -63,6 +63,8 @@ private const val AUTO_NEXT_DELAY = 1300L
 @Suppress("UNUSED_PARAMETER")
 @Composable
 fun QuizScreen(
+    playerName: String,
+    categoryText: String,
     mode: GameMode,
     question: KanjiEntity,
     options: List<String>,
@@ -79,11 +81,6 @@ fun QuizScreen(
         GameMode.READING -> question.reading
         GameMode.MEANING -> question.meaning
     }.trim()
-
-    val titleText = when (mode) {
-        GameMode.READING -> "เลือกคำอ่านที่ถูกต้อง"
-        GameMode.MEANING -> "เลือกความหมายที่ถูกต้อง"
-    }
 
     val displayOptions = remember(options, correctAnswer) {
         val cleaned = options
@@ -116,27 +113,63 @@ fun QuizScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = ScreenPadding, vertical = 12.dp),
+                .navigationBarsPadding()
+                .padding(horizontal = ScreenPadding, vertical = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "ผู้เล่น: $playerName",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFF3A3151)
+                )
+
+                Text(
+                    text = "หมวด: $categoryText",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFF5C5470)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "ข้อ $questionNumber / $totalQuestions",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF5C5470)
+                )
+
+                Text(
+                    text = "คะแนน $score",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF5C5470)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             SegmentedProgress(
                 current = questionNumber,
                 total = totalQuestions,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp, bottom = 14.dp)
+                modifier = Modifier.fillMaxWidth()
             )
 
-            Text(
-                text = titleText,
-                modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFF222222),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Box(
                 modifier = Modifier.fillMaxWidth(),
@@ -144,7 +177,7 @@ fun QuizScreen(
             ) {
                 Surface(
                     modifier = Modifier
-                        .fillMaxWidth(0.58f)
+                        .fillMaxWidth(0.56f)
                         .aspectRatio(1f),
                     shape = RoundedCornerShape(16.dp),
                     color = Color.White,
@@ -181,20 +214,23 @@ fun QuizScreen(
             ) {
                 Text(
                     text = question.kanji,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 14.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 16.dp),
                     textAlign = TextAlign.Center,
                     color = Color(0xFF3A3151),
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.ExtraBold
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             BoxWithConstraints(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
             ) {
-                val itemWidth = (maxWidth - OptionSpacing) / 2
                 val optionColors = listOf(
                     ChoiceRed,
                     ChoiceBlue,
@@ -202,13 +238,17 @@ fun QuizScreen(
                     ChoiceGreen
                 )
 
+                val rowHeight = (maxHeight - OptionSpacing) / 2
+
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(OptionSpacing)
                 ) {
                     displayOptions.chunked(2).forEachIndexed { rowIndex, rowItems ->
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(rowHeight),
                             horizontalArrangement = Arrangement.spacedBy(OptionSpacing)
                         ) {
                             rowItems.forEachIndexed { colIndex, option ->
@@ -224,7 +264,9 @@ fun QuizScreen(
                                         correctAnswer = correctAnswer,
                                         selectedAnswer = selectedAnswer
                                     ),
-                                    modifier = Modifier.width(itemWidth),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight(),
                                     onClick = {
                                         if (selectedAnswer == null) {
                                             onAnswerClick(option)
@@ -235,7 +277,11 @@ fun QuizScreen(
                             }
 
                             if (rowItems.size == 1) {
-                                Spacer(modifier = Modifier.width(itemWidth))
+                                Spacer(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                )
                             }
                         }
                     }
@@ -299,13 +345,12 @@ private fun QuizOptionButton(
 
     Surface(
         modifier = modifier
-            .height(118.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(10.dp))
             .clickable(
                 enabled = state == OptionVisualState.NORMAL,
                 onClick = onClick
             ),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(10.dp),
         color = backgroundColor,
         border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.12f)),
         shadowElevation = 2.dp
@@ -314,7 +359,7 @@ private fun QuizOptionButton(
             Box(
                 modifier = Modifier
                     .padding(12.dp)
-                    .size(26.dp)
+                    .size(28.dp)
                     .clip(CircleShape)
                     .background(Color.White.copy(alpha = 0.95f)),
                 contentAlignment = Alignment.Center
@@ -333,7 +378,7 @@ private fun QuizOptionButton(
                     .padding(horizontal = 14.dp),
                 color = textColor,
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.ExtraBold
             )
         }
