@@ -1,7 +1,5 @@
 package com.example.kanji.ui.screens
 
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -20,9 +18,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -41,20 +40,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.kanji.data.local.KanjiEntity
 import com.example.kanji.model.GameMode
+import com.example.kanji.ui.theme.AppBackground
+import com.example.kanji.ui.theme.BgWhite
+import com.example.kanji.ui.theme.ButtonBorder
+import com.example.kanji.ui.theme.CardWhite
+import com.example.kanji.ui.theme.ChoiceBlue
+import com.example.kanji.ui.theme.ChoiceGreen
+import com.example.kanji.ui.theme.ChoiceRed
+import com.example.kanji.ui.theme.ChoiceYellow
+import com.example.kanji.ui.theme.CorrectColor
+import com.example.kanji.ui.theme.HeaderPrimary
+import com.example.kanji.ui.theme.HeaderSecondary
+import com.example.kanji.ui.theme.ProgressActive
+import com.example.kanji.ui.theme.ProgressInactive
+import com.example.kanji.ui.theme.QuestionBg
+import com.example.kanji.ui.theme.WrongColor
+import com.example.kanji.ui.theme.WrongMuted
 import com.example.kanji.util.ImageMapper
 import kotlinx.coroutines.delay
-
-private val BgWhite = Color(0xFFFFFFFF)
-private val QuestionBg = Color(0xFFF3EAFE)
-
-private val ChoiceRed = Color(0xFFE21B3C)
-private val ChoiceBlue = Color(0xFF1368CE)
-private val ChoiceYellow = Color(0xFFD89E00)
-private val ChoiceGreen = Color(0xFF26890C)
-
-private val CorrectColor = Color(0xFF63C132)
-private val WrongColor = Color(0xFFFF3B5C)
-private val WrongMuted = Color(0xFFA95A5A)
 
 private val ScreenPadding = 16.dp
 private val OptionSpacing = 10.dp
@@ -88,11 +91,7 @@ fun QuizScreen(
             .filter { it.isNotBlank() }
             .distinct()
 
-        if (correctAnswer in cleaned) {
-            cleaned
-        } else {
-            (cleaned + correctAnswer).distinct()
-        }
+        if (correctAnswer in cleaned) cleaned else (cleaned + correctAnswer).distinct()
     }
 
     val isAnswered = selectedAnswer != null
@@ -108,11 +107,12 @@ fun QuizScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgWhite)
+            .background(AppBackground)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .navigationBarsPadding()
                 .padding(horizontal = ScreenPadding, vertical = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -128,14 +128,14 @@ fun QuizScreen(
                     text = "ผู้เล่น: $playerName",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFF3A3151)
+                    color = HeaderPrimary
                 )
 
                 Text(
                     text = "หมวด: $categoryText",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFF5C5470)
+                    color = HeaderSecondary
                 )
             }
 
@@ -150,14 +150,14 @@ fun QuizScreen(
                     text = "ข้อ $questionNumber / $totalQuestions",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF5C5470)
+                    color = HeaderSecondary
                 )
 
                 Text(
                     text = "คะแนน $score",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF5C5470)
+                    color = HeaderSecondary
                 )
             }
 
@@ -180,8 +180,8 @@ fun QuizScreen(
                         .fillMaxWidth(0.56f)
                         .aspectRatio(1f),
                     shape = RoundedCornerShape(16.dp),
-                    color = Color.White,
-                    border = BorderStroke(1.dp, Color(0xFFE7E7E7)),
+                    color = CardWhite,
+                    border = BorderStroke(1.dp, ButtonBorder),
                     shadowElevation = 3.dp
                 ) {
                     Image(
@@ -192,16 +192,15 @@ fun QuizScreen(
                     )
                 }
 
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = isAnswered,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                ) {
-                    ResultBanner(isCorrect = isCorrect)
+                if (isAnswered) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                    ) {
+                        ResultBanner(isCorrect = isCorrect)
+                    }
                 }
             }
 
@@ -218,7 +217,7 @@ fun QuizScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 14.dp, vertical = 16.dp),
                     textAlign = TextAlign.Center,
-                    color = Color(0xFF3A3151),
+                    color = HeaderPrimary,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.ExtraBold
                 )
@@ -308,7 +307,7 @@ private fun SegmentedProgress(
                     .height(5.dp)
                     .clip(RoundedCornerShape(99.dp))
                     .background(
-                        if (index < current) Color(0xFF1F1F1F) else Color(0xFFE3E3E3)
+                        if (index < current) ProgressActive else ProgressInactive
                     )
             )
         }
@@ -333,14 +332,13 @@ private fun QuizOptionButton(
 
     val badgeText = when (state) {
         OptionVisualState.CORRECT -> "✓"
-        OptionVisualState.WRONG_SELECTED,
-        OptionVisualState.WRONG_OTHER -> "✕"
         OptionVisualState.NORMAL -> marker
+        else -> "✕"
     }
 
     val textColor = when (state) {
-        OptionVisualState.WRONG_OTHER -> Color.White.copy(alpha = 0.72f)
-        else -> Color.White
+        OptionVisualState.WRONG_OTHER -> BgWhite.copy(alpha = 0.72f)
+        else -> BgWhite
     }
 
     Surface(
@@ -352,7 +350,7 @@ private fun QuizOptionButton(
             ),
         shape = RoundedCornerShape(10.dp),
         color = backgroundColor,
-        border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.12f)),
+        border = BorderStroke(1.dp, ButtonBorder),
         shadowElevation = 2.dp
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -361,7 +359,7 @@ private fun QuizOptionButton(
                     .padding(12.dp)
                     .size(28.dp)
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.95f)),
+                    .background(BgWhite.copy(alpha = 0.95f)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -405,7 +403,7 @@ private fun ResultBanner(isCorrect: Boolean) {
         ) {
             Text(
                 text = text,
-                color = Color.White,
+                color = BgWhite,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.ExtraBold
             )

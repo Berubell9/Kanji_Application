@@ -1,5 +1,6 @@
 package com.example.kanji.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -20,7 +21,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.kanji.ui.theme.BgWhite
+import com.example.kanji.ui.theme.BorderSoft
+import com.example.kanji.ui.theme.CardWhite
 import com.example.kanji.ui.theme.GreenPrimary
+import com.example.kanji.ui.theme.HomeTitle
+import com.example.kanji.ui.theme.QuestionBg
+import com.example.kanji.ui.theme.SecondaryButtonText
+import com.example.kanji.ui.theme.TextPrimary
 import com.example.kanji.ui.theme.TextSecondary
 
 @Composable
@@ -51,7 +59,8 @@ fun ResultScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.extraLarge,
             tonalElevation = 2.dp,
-            shadowElevation = 6.dp
+            shadowElevation = 6.dp,
+            color = CardWhite
         ) {
             Column(
                 modifier = Modifier.padding(28.dp),
@@ -60,7 +69,8 @@ fun ResultScreen(
                 Text(
                     text = "สรุปผลการฝึก",
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.ExtraBold,
+                    color = HomeTitle
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -75,7 +85,7 @@ fun ResultScreen(
 
                 Surface(
                     shape = MaterialTheme.shapes.extraLarge,
-                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.45f)
+                    color = QuestionBg
                 ) {
                     Column(
                         modifier = Modifier.padding(horizontal = 28.dp, vertical = 18.dp),
@@ -84,7 +94,8 @@ fun ResultScreen(
                         Text(
                             text = "$score / $total",
                             style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.ExtraBold,
+                            color = TextPrimary
                         )
 
                         Spacer(modifier = Modifier.height(6.dp))
@@ -106,7 +117,8 @@ fun ResultScreen(
                         .height(58.dp),
                     shape = MaterialTheme.shapes.large,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = GreenPrimary
+                        containerColor = GreenPrimary,
+                        contentColor = BgWhite
                     )
                 ) {
                     Text(
@@ -122,7 +134,12 @@ fun ResultScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(58.dp),
-                    shape = MaterialTheme.shapes.large
+                    shape = MaterialTheme.shapes.large,
+                    border = BorderStroke(1.dp, BorderSoft),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = BgWhite,
+                        contentColor = SecondaryButtonText
+                    )
                 ) {
                     Text(
                         text = "กลับหน้าแรก",

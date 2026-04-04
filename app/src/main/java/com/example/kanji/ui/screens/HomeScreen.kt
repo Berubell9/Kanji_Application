@@ -8,12 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -24,8 +23,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.kanji.data.local.QuizResultEntity
 import com.example.kanji.model.PracticeCategory
+import com.example.kanji.ui.theme.CardWhite
+import com.example.kanji.ui.theme.CategoryChipSelectedBg
+import com.example.kanji.ui.theme.CategoryChipSelectedBorder
+import com.example.kanji.ui.theme.CategoryChipUnselectedBg
+import com.example.kanji.ui.theme.CategoryChipUnselectedBorder
+import com.example.kanji.ui.theme.ErrorSoftBg
+import com.example.kanji.ui.theme.ErrorText
 import com.example.kanji.ui.theme.GreenPrimary
+import com.example.kanji.ui.theme.HomeTitle
+import com.example.kanji.ui.theme.LatestResultItemBg
+import com.example.kanji.ui.theme.SecondaryButtonBg
+import com.example.kanji.ui.theme.SecondaryButtonText
+import com.example.kanji.ui.theme.TextPrimary
 import com.example.kanji.ui.theme.TextSecondary
+import com.example.kanji.ui.theme.BgWhite
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -49,7 +61,8 @@ fun HomeScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.extraLarge,
             tonalElevation = 2.dp,
-            shadowElevation = 6.dp
+            shadowElevation = 6.dp,
+            color = CardWhite
         ) {
             Column(
                 modifier = Modifier.padding(24.dp)
@@ -57,7 +70,8 @@ fun HomeScreen(
                 Text(
                     text = "Kanji Quiz",
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.ExtraBold,
+                    color = HomeTitle
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -74,11 +88,11 @@ fun HomeScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
+                color = ErrorSoftBg
             ) {
                 Text(
                     text = errorMessage,
-                    color = MaterialTheme.colorScheme.error,
+                    color = ErrorText,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -89,7 +103,8 @@ fun HomeScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.extraLarge,
             tonalElevation = 1.dp,
-            shadowElevation = 4.dp
+            shadowElevation = 4.dp,
+            color = CardWhite
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
@@ -98,7 +113,8 @@ fun HomeScreen(
                 Text(
                     text = "เลือกหมวดหมู่",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
 
                 FlowRow(
@@ -111,15 +127,21 @@ fun HomeScreen(
                         OutlinedButton(
                             onClick = { onCategorySelected(category) },
                             shape = MaterialTheme.shapes.large,
-                            border = ButtonDefaults.outlinedButtonBorder.copy(
-                                width = if (isSelected) 2.dp else 1.dp
+                            border = androidx.compose.foundation.BorderStroke(
+                                width = if (isSelected) 2.dp else 1.dp,
+                                color = if (isSelected) {
+                                    CategoryChipSelectedBorder
+                                } else {
+                                    CategoryChipUnselectedBorder
+                                }
                             ),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = if (isSelected) {
-                                    MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
+                                    CategoryChipSelectedBg
                                 } else {
-                                    MaterialTheme.colorScheme.surface
-                                }
+                                    CategoryChipUnselectedBg
+                                },
+                                contentColor = TextPrimary
                             )
                         ) {
                             Text(
@@ -136,7 +158,8 @@ fun HomeScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.extraLarge,
             tonalElevation = 1.dp,
-            shadowElevation = 4.dp
+            shadowElevation = 4.dp,
+            color = CardWhite
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
@@ -145,7 +168,8 @@ fun HomeScreen(
                 Text(
                     text = "เลือกโหมดการเล่น",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
 
                 Button(
@@ -156,7 +180,10 @@ fun HomeScreen(
                         .height(58.dp),
                     shape = MaterialTheme.shapes.large,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = GreenPrimary
+                        containerColor = GreenPrimary,
+                        contentColor = BgWhite,
+                        disabledContainerColor = GreenPrimary.copy(alpha = 0.5f),
+                        disabledContentColor = BgWhite.copy(alpha = 0.8f)
                     )
                 ) {
                     Text(
@@ -165,13 +192,19 @@ fun HomeScreen(
                     )
                 }
 
-                FilledTonalButton(
+                Button(
                     onClick = onMeaningClick,
                     enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(58.dp),
-                    shape = MaterialTheme.shapes.large
+                    shape = MaterialTheme.shapes.large,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = SecondaryButtonBg,
+                        contentColor = SecondaryButtonText,
+                        disabledContainerColor = SecondaryButtonBg.copy(alpha = 0.6f),
+                        disabledContentColor = SecondaryButtonText.copy(alpha = 0.7f)
+                    )
                 ) {
                     Text(
                         text = "โหมดทายความหมาย",
@@ -186,7 +219,8 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.extraLarge,
                 tonalElevation = 1.dp,
-                shadowElevation = 4.dp
+                shadowElevation = 4.dp,
+                color = CardWhite
             ) {
                 Column(
                     modifier = Modifier.padding(20.dp),
@@ -195,14 +229,15 @@ fun HomeScreen(
                     Text(
                         text = "ผลล่าสุด",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
                     )
 
                     latestResults.forEachIndexed { index, result ->
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = MaterialTheme.shapes.large,
-                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.45f)
+                            color = LatestResultItemBg
                         ) {
                             Column(
                                 modifier = Modifier.padding(14.dp)
@@ -215,7 +250,8 @@ fun HomeScreen(
                                 Text(
                                     text = "${result.mode} • ${result.score}/${result.total}",
                                     style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TextPrimary
                                 )
                             }
                         }

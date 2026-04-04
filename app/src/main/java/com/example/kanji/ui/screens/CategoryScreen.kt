@@ -38,8 +38,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.kanji.R
 import com.example.kanji.model.PracticeCategory
+import com.example.kanji.ui.theme.AllGradientEnd
+import com.example.kanji.ui.theme.AllGradientMid
+import com.example.kanji.ui.theme.AllGradientStart
+import com.example.kanji.ui.theme.AnimalGradientEnd
+import com.example.kanji.ui.theme.AnimalGradientMid
+import com.example.kanji.ui.theme.AnimalGradientStart
+import com.example.kanji.ui.theme.BackButtonBg
+import com.example.kanji.ui.theme.BackButtonText
+import com.example.kanji.ui.theme.BgWhite
+import com.example.kanji.ui.theme.CategorySelectedText
+import com.example.kanji.ui.theme.CategoryTitle
 import com.example.kanji.ui.theme.GreenPrimary
+import com.example.kanji.ui.theme.ObjectGradientEnd
+import com.example.kanji.ui.theme.ObjectGradientMid
+import com.example.kanji.ui.theme.ObjectGradientStart
+import com.example.kanji.ui.theme.OverlayBlackSoft
+import com.example.kanji.ui.theme.OverlayBlackStrong
+import com.example.kanji.ui.theme.OverlayWhiteSoft
+import com.example.kanji.ui.theme.SelectedBadgeText
 import com.example.kanji.ui.theme.TextSecondary
+import com.example.kanji.ui.theme.VerbGradientEnd
+import com.example.kanji.ui.theme.VerbGradientMid
+import com.example.kanji.ui.theme.VerbGradientStart
 
 @Composable
 fun CategoryScreen(
@@ -61,11 +82,12 @@ fun CategoryScreen(
                 .align(Alignment.TopStart)
                 .verticalScroll(rememberScrollState())
         ) {
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "เลือกหมวดหมู่",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color(0xFF4A3A3A)
+                color = CategoryTitle
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -82,9 +104,9 @@ fun CategoryScreen(
                 title = "ทั้งหมด",
                 imageRes = R.drawable.object_book,
                 gradientColors = listOf(
-                    Color(0xFF3A185E),
-                    Color(0xFF6F2DBD),
-                    Color(0xFF9D4EDD)
+                    AllGradientStart,
+                    AllGradientMid,
+                    AllGradientEnd
                 ),
                 selected = selectedCategory == PracticeCategory.ALL,
                 onClick = { onCategorySelected(PracticeCategory.ALL) }
@@ -96,9 +118,9 @@ fun CategoryScreen(
                 title = "สัตว์",
                 imageRes = R.drawable.animal_dog,
                 gradientColors = listOf(
-                    Color(0xFF1F4D2E),
-                    Color(0xFF2E8B57),
-                    Color(0xFF57CC99)
+                    AnimalGradientStart,
+                    AnimalGradientMid,
+                    AnimalGradientEnd
                 ),
                 selected = selectedCategory == PracticeCategory.ANIMALS,
                 onClick = { onCategorySelected(PracticeCategory.ANIMALS) }
@@ -110,9 +132,9 @@ fun CategoryScreen(
                 title = "สิ่งของ",
                 imageRes = R.drawable.object_book,
                 gradientColors = listOf(
-                    Color(0xFF6B3E12),
-                    Color(0xFFD97706),
-                    Color(0xFFFBBF24)
+                    ObjectGradientStart,
+                    ObjectGradientMid,
+                    ObjectGradientEnd
                 ),
                 selected = selectedCategory == PracticeCategory.OBJECTS,
                 onClick = { onCategorySelected(PracticeCategory.OBJECTS) }
@@ -124,9 +146,9 @@ fun CategoryScreen(
                 title = "กริยา",
                 imageRes = R.drawable.verb_run,
                 gradientColors = listOf(
-                    Color(0xFF7A1029),
-                    Color(0xFFD6336C),
-                    Color(0xFFFF8FAB)
+                    VerbGradientStart,
+                    VerbGradientMid,
+                    VerbGradientEnd
                 ),
                 selected = selectedCategory == PracticeCategory.VERBS,
                 onClick = { onCategorySelected(PracticeCategory.VERBS) }
@@ -144,7 +166,7 @@ fun CategoryScreen(
                 text = "หมวดที่เลือก: ${selectedCategory.displayName}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFF2A0B2)
+                color = CategorySelectedText
             )
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -160,8 +182,8 @@ fun CategoryScreen(
                         .height(54.dp),
                     shape = RoundedCornerShape(18.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFD9D2E0),
-                        contentColor = Color(0xFF7A6F7A)
+                        containerColor = BackButtonBg,
+                        contentColor = BackButtonText
                     )
                 ) {
                     Text("ย้อนกลับ", fontWeight = FontWeight.SemiBold)
@@ -175,7 +197,7 @@ fun CategoryScreen(
                     shape = RoundedCornerShape(18.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = GreenPrimary,
-                        contentColor = Color.White
+                        contentColor = BgWhite
                     )
                 ) {
                     Text("ถัดไป", fontWeight = FontWeight.Bold)
@@ -202,7 +224,7 @@ private fun CategorySelectableCard(
             .clip(shape)
             .border(
                 width = if (selected) 3.dp else 0.dp,
-                color = if (selected) Color.White else Color.Transparent,
+                color = if (selected) BgWhite else Color.Transparent,
                 shape = shape
             )
             .clickable { onClick() },
@@ -219,7 +241,7 @@ private fun CategorySelectableCard(
                     .size(170.dp)
                     .align(Alignment.TopCenter)
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.10f))
+                    .background(OverlayWhiteSoft)
             )
 
             Box(
@@ -228,7 +250,7 @@ private fun CategorySelectableCard(
                     .align(Alignment.TopStart)
                     .padding(start = 28.dp)
                     .clip(CircleShape)
-                    .background(Color.Black.copy(alpha = 0.10f))
+                    .background(OverlayBlackSoft)
             )
 
             Box(
@@ -237,7 +259,7 @@ private fun CategorySelectableCard(
                     .fillMaxWidth(0.68f)
                     .background(
                         brush = Brush.horizontalGradient(
-                            listOf(Color.Black.copy(alpha = 0.20f), Color.Transparent)
+                            listOf(OverlayBlackStrong, Color.Transparent)
                         )
                     )
             )
@@ -255,7 +277,7 @@ private fun CategorySelectableCard(
 
             Text(
                 text = title,
-                color = Color.White,
+                color = BgWhite,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.ExtraBold,
                 modifier = Modifier
@@ -269,12 +291,12 @@ private fun CategorySelectableCard(
                         .align(Alignment.TopEnd)
                         .padding(10.dp)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.95f))
+                        .background(BgWhite.copy(alpha = 0.95f))
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
                         text = "เลือกแล้ว",
-                        color = Color(0xFF333333),
+                        color = SelectedBadgeText,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )
