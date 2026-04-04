@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
 val AppBackground = Color(0xFFFDE5EF)
 
 // สีหลักของปุ่มหลัก เช่น เริ่ม / ถัดไป
-val GreenPrimary = Color(0xFFFFA8B8)
+val GreenPrimary = Color(0xFFFF849B)
 
 
 
