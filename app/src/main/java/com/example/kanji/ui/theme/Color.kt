@@ -108,16 +108,16 @@ val ErrorText = Color(0xFFFF3B5C)
 // =====================================================
 
 // ตัวเลือก A
-val ChoiceRed = Color(0xFFE21B3C)
+val ChoiceRed = Color(0xFF6F2DBD)
 
 // ตัวเลือก B
-val ChoiceBlue = Color(0xFF1368CE)
+val ChoiceBlue = Color(0xFF71A5E5)
 
 // ตัวเลือก C
-val ChoiceYellow = Color(0xFFD89E00)
+val ChoiceYellow = Color(0xFFFBBF24)
 
 // ตัวเลือก D
-val ChoiceGreen = Color(0xFF26890C)
+val ChoiceGreen = Color(0xFF8FD37C)
 
 
 // =====================================================
@@ -125,7 +125,7 @@ val ChoiceGreen = Color(0xFF26890C)
 // =====================================================
 
 // progress ที่ทำแล้ว
-val ProgressActive = Color(0xFFBE185D)
+val ProgressActive = Color(0xFFFA3B87)
 
 // progress ที่ยังไม่ทำ
 val ProgressInactive = Color(0xFFFBCFE8)

@@ -60,14 +60,6 @@ fun NameInputScreen(
                     color = HomeTitle
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "กรอกชื่อเล่นก่อนเริ่มเกม",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextSecondary
-                )
-
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
